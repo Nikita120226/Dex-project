@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEX – Decentralized Exchange</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --card: #22263a;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --text: #e8eaf6;
+      --muted: #8b90b0;
+      --success: #00d4aa;
+      --error: #ff6b6b;
+      --warning: #ffd166;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .wallet-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .network-badge {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .network-badge.connected { border-color: var(--success); color: var(--success); }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) { main { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .icon { font-size: 1.3rem; }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* ── Inputs ── */
+    .input-group { margin-bottom: 14px; }
+    .input-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .token-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 60px 12px 16px;
+      color: var(--text);
+      font-size: 1.1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .token-input:focus { border-color: var(--accent); }
+    .token-badge {
+      position: absolute;
+      right: 12px;
+      background: var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .max-btn {
+      position: absolute;
+      right: 60px;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-success {
+      background: linear-gradient(135deg, var(--accent2), #00b894);
+      color: #0f1117;
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, var(--accent3), #e17055);
+      color: white;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Info boxes ── */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .key { color: var(--muted); }
+    .info-row .val { font-weight: 600; }
+
+    /* ── Toast ── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      min-width: 300px;
+      max-width: 400px;
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error   { border-left: 4px solid var(--error); }
+    .toast.info    { border-left: 4px solid var(--accent); }
+    .toast-icon { font-size: 1.2rem; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 700; font-size: 0.9rem; }
+    .toast-msg   { font-size: 0.8rem; color: var(--muted); margin-top: 2px; word-break: break-all; }
+    @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Connect ── */
+    #connect-overlay {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .connect-card {
+      background: var(--card);
+      border: 2px dashed var(--border);
+      border-radius: 20px;
+      padding: 60px;
+      display: inline-block;
+      max-width: 500px;
+    }
+    .connect-card h2 { font-size: 1.8rem; margin-bottom: 12px; }
+    .connect-card p  { color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+
+    /* ── DEX selector ── */
+    .dex-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .dex-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .dex-btn.active {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(0, 212, 170, 0.08);
+    }
+
+    /* ── Tx log ── */
+    .tx-log {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+    }
+    .tx-item {
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      background: var(--surface);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tx-item a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-swap { background: rgba(108,99,255,0.2); color: var(--accent); }
+    .badge-add  { background: rgba(0,212,170,0.2);  color: var(--accent2); }
+    .badge-rm   { background: rgba(255,107,107,0.2); color: var(--accent3); }
+    .badge-arb  { background: rgba(255,209,102,0.2); color: var(--warning); }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .arrow-row {
+      text-align: center;
+      color: var(--muted);
+      font-size: 1.4rem;
+      margin: 4px 0;
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .section-tag {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      background: rgba(108,99,255,0.2);
+      color: var(--accent);
+      border-radius: 4px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡ DEX </div>
+  <div class="wallet-info">
+    <span class="network-badge" id="network-badge">Not Connected</span>
+    <button class="btn btn-primary" id="connect-btn" style="width:auto;padding:10px 20px;margin:0" onclick="connectWallet()">
+      Connect Wallet
+    </button>
+  </div>
+</header>
+
+<main id="main-content">
+  <!-- connect overlay -->
+  <div id="connect-overlay">
+    <div class="connect-card">
+      <div style="font-size:4rem;margin-bottom:16px">⚡</div>
+      <h2>DEX </h2>
+      <p>A fully on-chain AMM built with the constant product formula (x·y=k).<br>
+         Connect your MetaMask wallet to start trading.</p>
+      <button class="btn btn-primary" onclick="connectWallet()" style="max-width:280px;margin:0 auto">
+        🦊 Connect MetaMask
+      </button>
+    </div>
+  </div>
+</main>
+
+<div id="toast-container"></div>
+
+<script src="src/abis.js"></script>
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let provider, signer, userAddr;
+let tokenAContract, tokenBContract, lpTokenContract, dexContract, arb;
+let addresses = {};
+let currentDex = 'dex1'; // or 'dex2'
+let txLog = [];
+
+const EXPLORER_BASE = {
+  sepolia: "https://sepolia.etherscan.io",
+  localhost: "",
+};
+
+// ── Load Addresses ───────────────────────────────────────────────────────────
+async function loadAddresses() {
+  try {
+    const res = await fetch('src/addresses.json');
+    addresses = await res.json();
+    return true;
+  } catch {
+    toast("Config missing", "Deploy contracts first, then copy addresses.json to frontend/src/", "error");
+    return false;
+  }
+}
+
+// ── Connect Wallet ───────────────────────────────────────────────────────────
+async function connectWallet() {
+  if (!window.ethereum) {
+    toast("MetaMask not found", "Please install MetaMask browser extension", "error");
+    return;
+  }
+  const ok = await loadAddresses();
+  if (!ok) return;
+
+  try {
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer   = await provider.getSigner();
+    userAddr = await signer.getAddress();
+
+    // ── Network check ──────────────────────────────────────────────────────
+    const network     = await provider.getNetwork();
+    const chainId     = Number(network.chainId);
+    const isLocalhost = chainId === 31337;
+    const isSepolia   = chainId === 11155111;
+
+    if (!isLocalhost && !isSepolia) {
+      toast(
+        "Wrong Network (" + chainId + ")",
+        "Switch MetaMask to Hardhat Localhost (chain 31337) or Sepolia (11155111) and try again.",
+        "error"
+      );
+      document.getElementById("connect-btn").textContent = "Wrong Network — fix in MetaMask";
+      document.getElementById("connect-btn").disabled = false;
+      return;
+    }
+
+    const netLabel = isLocalhost ? "localhost:8545" : "Sepolia";
+    document.getElementById("network-badge").textContent =
+      netLabel + " · " + userAddr.slice(0,6) + "..." + userAddr.slice(-4);
+    document.getElementById("network-badge").classList.add("connected");
+    document.getElementById("connect-btn").textContent = "✓ Connected";
+    document.getElementById("connect-btn").disabled = true;
+
+    // ── Init contracts using addresses.json directly (no on-chain call) ───
+    tokenAContract  = new ethers.Contract(addresses.tokenA,      window.TOKEN_ABI,     signer);
+    tokenBContract  = new ethers.Contract(addresses.tokenB,      window.TOKEN_ABI,     signer);
+    dexContract     = new ethers.Contract(addresses[currentDex], window.DEX_ABI,       signer);
+    const lpKey     = currentDex === "dex1" ? "lpToken1" : "lpToken2";
+    lpTokenContract = new ethers.Contract(addresses[lpKey],      window.TOKEN_ABI,     signer);
+
+    if (addresses.arbitrage) {
+      arb = new ethers.Contract(addresses.arbitrage, window.ARBITRAGE_ABI, signer);
+    }
+
+    renderApp();
+    await refreshAll();
+    toast("Connected!", "Wallet: " + userAddr.slice(0,8) + "... on " + netLabel, "success");
+
+    window.ethereum.on("accountsChanged", () => location.reload());
+    window.ethereum.on("chainChanged",    () => location.reload());
+  } catch (e) {
+    toast("Connection failed", e.message, "error");
+  }
+}
+
+// ── Switch DEX ───────────────────────────────────────────────────────────────
+async function switchDex(id) {
+  currentDex  = id;
+  dexContract = new ethers.Contract(addresses[id], window.DEX_ABI, signer);
+  const lpKey = id === "dex1" ? "lpToken1" : "lpToken2";
+  lpTokenContract = new ethers.Contract(addresses[lpKey], window.TOKEN_ABI, signer);
+  document.querySelectorAll(".dex-btn").forEach(b => b.classList.toggle("active", b.dataset.id === id));
+  await refreshAll();
+}
+
+// ── Render App ───────────────────────────────────────────────────────────────
+function renderApp() {
+  document.getElementById("main-content").innerHTML = `
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat"><div class="stat-label">Reserve A</div><div class="stat-value" id="s-rA">—</div></div>
+      <div class="stat"><div class="stat-label">Reserve B</div><div class="stat-value" id="s-rB">—</div></div>
+      <div class="stat"><div class="stat-label">Spot Price (B/A)</div><div class="stat-value" id="s-sp">—</div></div>
+      <div class="stat"><div class="stat-label">Your LP Tokens</div><div class="stat-value" id="s-lp">—</div></div>
+      <div class="stat"><div class="stat-label">TKA Balance</div><div class="stat-value" id="s-balA">—</div></div>
+      <div class="stat"><div class="stat-label">TKB Balance</div><div class="stat-value" id="s-balB">—</div></div>
+    </div>
+
+    <!-- DEX Selector -->
+    <div class="full-width" style="display:flex;gap:8px;align-items:center">
+      <span style="color:var(--muted);font-size:0.9rem">Active DEX:</span>
+      <div class="dex-selector" style="flex:1">
+        <button class="dex-btn active" data-id="dex1" onclick="switchDex('dex1')">DEX 1 </button>
+        <button class="dex-btn" data-id="dex2" onclick="switchDex('dex2')">DEX 2 </button>
+      </div>
+      
+    </div>
+
+    <!-- Swap Card -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">🔄</span> Swap Tokens
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="setSwapDir('AtoB',this)">TKA → TKB</button>
+        <button class="tab"        onclick="setSwapDir('BtoA',this)">TKB → TKA</button>
+      </div>
+      <div class="input-group">
+        <div class="input-label">
+          <span>You Pay</span>
+          <span id="swap-bal-in">Balance: —</span>
+        </div>
+        <div class="input-wrap">
+          <input class="token-input" id="swap-in" type="number" placeholder="0.0" oninput="previewSwap()" />
+          <button class="max-btn" onclick="setMaxSwap()">MAX</button>
+          <span class="token-badge" id="swap-in-badge">TKA</span>
+        </div>
+      </div>
+      <div class="arrow-row">↕</div>
+      <div class="input-group">
+        <div class="input-label">
+          <span>You Receive (est.)</span>
+          <span id="swap-bal-out">Balance: —</span>
+        </div>
+        <div class="input-wrap">
+          <input class="token-input" id="swap-out" type="number" placeholder="0.0" readonly />
+          <span class="token-badge" id="swap-out-badge">TKB</span>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="info-row"><span class="key">Fee</span><span class="val">0.3%</span></div>
+        <div class="info-row"><span class="key">Slippage (est.)</span><span class="val" id="swap-slip">—</span></div>
+        <div class="info-row"><span class="key">Price Impact</span><span class="val" id="swap-impact">—</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="doSwap()">Swap</button>
+    </div>
+
+    <!-- Liquidity Card -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">💧</span> Liquidity
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="setLiqTab('add',this)">Add</button>
+        <button class="tab"        onclick="setLiqTab('remove',this)">Remove</button>
+      </div>
+
+      <!-- Add -->
+      <div id="liq-add">
+        <div class="input-group">
+          <div class="input-label">
+            <span>TokenA Amount</span>
+            <span id="liq-balA">Balance: —</span>
+          </div>
+          <div class="input-wrap">
+            <input class="token-input" id="liq-A" type="number" placeholder="0.0" oninput="autoFillB()" />
+            <button class="max-btn" onclick="setMaxLiqA()">MAX</button>
+            <span class="token-badge">TKA</span>
+          </div>
+        </div>
+        <div class="arrow-row">+</div>
+        <div class="input-group">
+          <div class="input-label">
+            <span>TokenB Amount (auto-calculated)</span>
+            <span id="liq-balB">Balance: —</span>
+          </div>
+          <div class="input-wrap">
+            <input class="token-input" id="liq-B" type="number" placeholder="0.0" />
+            <span class="token-badge">TKB</span>
+          </div>
+        </div>
+        <div class="info-row"><span class="key">LP Tokens to Receive</span><span class="val" id="liq-lp-est">—</span></div>
+        <button class="btn btn-success" onclick="doAddLiquidity()" style="margin-top:12px">Add Liquidity</button>
+      </div>
+
+      <!-- Remove -->
+      <div id="liq-remove" style="display:none">
+        <div class="input-group">
+          <div class="input-label">
+            <span>LP Tokens to Burn</span>
+            <span id="liq-lp-bal">Your LP: —</span>
+          </div>
+          <div class="input-wrap">
+            <input class="token-input" id="rm-lp" type="number" placeholder="0.0" oninput="previewRemove()" />
+            <button class="max-btn" onclick="setMaxLp()">MAX</button>
+            <span class="token-badge">LPT</span>
+          </div>
+        </div>
+        <div style="margin:12px 0">
+          <div class="info-row"><span class="key">TKA to Receive</span><span class="val" id="rm-a">—</span></div>
+          <div class="info-row"><span class="key">TKB to Receive</span><span class="val" id="rm-b">—</span></div>
+        </div>
+        <button class="btn btn-danger" onclick="doRemoveLiquidity()">Remove Liquidity</button>
+      </div>
+    </div>
+
+    <!-- Pool Info -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📊</span> Pool Info</div>
+      <div class="info-row"><span class="key">TokenA Address</span><span class="val" style="font-size:0.75rem" id="pi-addrA">—</span></div>
+      <div class="info-row"><span class="key">TokenB Address</span><span class="val" style="font-size:0.75rem" id="pi-addrB">—</span></div>
+      <div class="info-row"><span class="key">DEX Address</span>   <span class="val" style="font-size:0.75rem" id="pi-dex">—</span></div>
+      <div class="info-row"><span class="key">LP Token Address</span><span class="val" style="font-size:0.75rem" id="pi-lp">—</span></div>
+      <div class="info-row"><span class="key">Price B→A</span>    <span class="val" id="pi-boa">—</span></div>
+      <div class="info-row"><span class="key">Reserve Ratio A/B</span><span class="val" id="pi-ratio">—</span></div>
+      <div class="info-row"><span class="key">Total LP Supply</span><span class="val" id="pi-totalLP">—</span></div>
+    </div>
+
+    <!-- Arbitrage -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">⚡</span> Arbitrage
+      </div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">
+        Checks for price discrepancies between DEX1 and DEX2. If profitable, executes the trade.
+      </p>
+      <div class="input-group">
+        <div class="input-label"><span>Capital A (TKA)</span></div>
+        <div class="input-wrap">
+          <input class="token-input" id="arb-capA" type="number" placeholder="10" value="10" />
+          <span class="token-badge">TKA</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label"><span>Capital B (TKB)</span></div>
+        <div class="input-wrap">
+          <input class="token-input" id="arb-capB" type="number" placeholder="0" value="0" />
+          <span class="token-badge">TKB</span>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="info-row"><span class="key">Est. Profit A→B→A</span><span class="val" id="arb-p1">—</span></div>
+        <div class="info-row"><span class="key">Est. Profit B→A→B</span><span class="val" id="arb-p2">—</span></div>
+        <div class="info-row"><span class="key">Arb Contract Addr</span><span class="val" style="font-size:0.75rem" id="arb-addr">—</span></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="checkArb()" style="margin:0">Check</button>
+        <button class="btn btn-primary" onclick="doArbitrage()" style="margin:0">Execute Arb</button>
+      </div>
+    </div>
+
+    
+  `;
+}
+
+// ── State vars ───────────────────────────────────────────────────────────────
+let swapDir = 'AtoB';
+let liqTab  = 'add';
+let poolState = { rA: 0n, rB: 0n, sp: 0n, ratio: 0n };
+
+function setSwapDir(dir, el) {
+  swapDir = dir;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('swap-in-badge').textContent  = dir === 'AtoB' ? 'TKA' : 'TKB';
+  document.getElementById('swap-out-badge').textContent = dir === 'AtoB' ? 'TKB' : 'TKA';
+  document.getElementById('swap-in').value = '';
+  document.getElementById('swap-out').value = '';
+  refreshBalances();
+}
+
+function setLiqTab(tab, el) {
+  liqTab = tab;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('liq-add').style.display    = tab === 'add'    ? '' : 'none';
+  document.getElementById('liq-remove').style.display = tab === 'remove' ? '' : 'none';
+}
+
+// ── Refresh ───────────────────────────────────────────────────────────────────
+async function refreshAll() {
+  await Promise.all([refreshPool(), refreshBalances(), refreshPoolInfo(), refreshArb()]);
+}
+
+async function refreshPool() {
+  try {
+    const [rA, rB] = await dexContract.getReserves();
+    const sp = await dexContract.spotPrice().catch(() => 0n);
+    const ratio = await dexContract.getReserveRatio().catch(() => 0n);
+    poolState = { rA, rB, sp, ratio };
+
+    document.getElementById('s-rA').textContent = fmt(rA) + ' TKA';
+    document.getElementById('s-rB').textContent = fmt(rB) + ' TKB';
+    document.getElementById('s-sp').textContent = fmt4(sp);
+  } catch {}
+}
+
+async function refreshBalances() {
+  try {
+    const [bA, bB, bLP] = await Promise.all([
+      tokenAContract.balanceOf(userAddr),
+      tokenBContract.balanceOf(userAddr),
+      lpTokenContract.balanceOf(userAddr),
+    ]);
+    document.getElementById('s-balA').textContent = fmt(bA) + ' TKA';
+    document.getElementById('s-balB').textContent = fmt(bB) + ' TKB';
+    document.getElementById('s-lp').textContent   = fmt(bLP) + ' LPT';
+
+    if (swapDir === 'AtoB') {
+      document.getElementById('swap-bal-in').textContent  = 'Balance: ' + fmt(bA) + ' TKA';
+      document.getElementById('swap-bal-out').textContent = 'Balance: ' + fmt(bB) + ' TKB';
+    } else {
+      document.getElementById('swap-bal-in').textContent  = 'Balance: ' + fmt(bB) + ' TKB';
+      document.getElementById('swap-bal-out').textContent = 'Balance: ' + fmt(bA) + ' TKA';
+    }
+    document.getElementById('liq-balA').textContent  = 'Balance: ' + fmt(bA) + ' TKA';
+    document.getElementById('liq-balB').textContent  = 'Balance: ' + fmt(bB) + ' TKB';
+    document.getElementById('liq-lp-bal').textContent = 'Your LP: ' + fmt(bLP) + ' LPT';
+  } catch {}
+}
+
+async function refreshPoolInfo() {
+  try {
+    const pBA   = await dexContract.priceOfBInA().catch(() => 0n);
+    const ratio = await dexContract.getReserveRatio().catch(() => 0n);
+    const lpTotal = await lpTokenContract.totalSupply();
+    const lpKey   = currentDex === "dex1" ? "lpToken1" : "lpToken2";
+    const lpAddr  = addresses[lpKey];
+
+    document.getElementById('pi-addrA').textContent  = addresses.tokenA;
+    document.getElementById('pi-addrB').textContent  = addresses.tokenB;
+    document.getElementById('pi-dex').textContent    = addresses[currentDex];
+    document.getElementById('pi-lp').textContent     = lpAddr;
+    document.getElementById('pi-boa').textContent    = fmt4(pBA) + ' TKA/TKB';
+    document.getElementById('pi-ratio').textContent  = fmt4(ratio);
+    document.getElementById('pi-totalLP').textContent = fmt(lpTotal);
+    document.getElementById('pi-ratio').textContent  = fmt4(ratio);
+  } catch {}
+}
+
+async function refreshArb() {
+  if (!arb) return;
+  document.getElementById('arb-addr').textContent = addresses.arbitrage || '—';
+}
+
+// ── Preview Swap ──────────────────────────────────────────────────────────────
+async function previewSwap() {
+  const val = document.getElementById('swap-in').value;
+  if (!val || isNaN(val) || parseFloat(val) <= 0) {
+    document.getElementById('swap-out').value = '';
+    return;
+  }
+  try {
+    const amtIn = ethers.parseEther(val);
+    const { rA, rB } = poolState;
+    let amtOut;
+    if (swapDir === 'AtoB') {
+      amtOut = await dexContract.getAmountOut_AtoB(amtIn);
+    } else {
+      amtOut = await dexContract.getAmountOut_BtoA(amtIn);
+    }
+    document.getElementById('swap-out').value = parseFloat(ethers.formatEther(amtOut)).toFixed(6);
+
+    // Slippage
+    const expectedPrice = swapDir === 'AtoB'
+      ? (rB * BigInt(1e18)) / rA
+      : (rA * BigInt(1e18)) / rB;
+    const actualPrice = (amtOut * BigInt(1e18)) / amtIn;
+    const slip = Number((actualPrice - expectedPrice) * 10000n / expectedPrice) / 100;
+    document.getElementById('swap-slip').textContent = Math.abs(slip).toFixed(3) + '%';
+
+    // Price impact
+    const impact = Number(amtIn * 10000n / (swapDir === 'AtoB' ? rA : rB)) / 100;
+    document.getElementById('swap-impact').textContent = impact.toFixed(3) + '%';
+  } catch {}
+}
+
+async function autoFillB() {
+  const val = document.getElementById('liq-A').value;
+  if (!val || isNaN(val) || parseFloat(val) <= 0) return;
+  const { rA, rB } = poolState;
+  if (rA === 0n) return; // first deposit — user sets ratio manually
+  try {
+    const amtA = ethers.parseEther(val);
+    // Use exact ratio from reserves
+    const ratio = rB / rA;
+    const amtB = (amtA * ratio);
+    // Add 1 wei to account for rounding (prevents ratio mismatch)
+    document.getElementById('liq-B').value = parseFloat(
+      ethers.formatEther(amtB)
+    ).toFixed(6);
+  } catch {}
+}
+
+async function previewRemove() {
+  const val = document.getElementById('rm-lp').value;
+  if (!val) return;
+  try {
+    const lpAmt = ethers.parseEther(val);
+    const totalLP = await lpTokenContract.totalSupply();
+    const { rA, rB } = poolState;
+    const aOut = (lpAmt * rA) / totalLP;
+    const bOut = (lpAmt * rB) / totalLP;
+    document.getElementById('rm-a').textContent = fmt(aOut) + ' TKA';
+    document.getElementById('rm-b').textContent = fmt(bOut) + ' TKB';
+  } catch {}
+}
+
+// ── MAX buttons ───────────────────────────────────────────────────────────────
+async function setMaxSwap() {
+  const bal = swapDir === 'AtoB'
+    ? await tokenAContract.balanceOf(userAddr)
+    : await tokenBContract.balanceOf(userAddr);
+  document.getElementById('swap-in').value = ethers.formatEther(bal);
+  previewSwap();
+}
+async function setMaxLiqA() {
+  const bal = await tokenAContract.balanceOf(userAddr);
+  document.getElementById('liq-A').value = ethers.formatEther(bal);
+  autoFillB();
+}
+async function setMaxLp() {
+  const bal = await lpTokenContract.balanceOf(userAddr);
+  document.getElementById('rm-lp').value = ethers.formatEther(bal);
+  previewRemove();
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+async function doSwap() {
+  const val = document.getElementById('swap-in').value;
+  if (!val || parseFloat(val) <= 0) { toast("Invalid amount", "Enter a swap amount", "error"); return; }
+
+  try {
+    const amtIn = ethers.parseEther(val);
+    // Approve
+    if (swapDir === 'AtoB') {
+      await approveIfNeeded(tokenAContract, amtIn);
+      const tx = await dexContract.swapAForB(amtIn, 0);
+      await waitTx(tx, "Swap TKA → TKB", "swap");
+    } else {
+      await approveIfNeeded(tokenBContract, amtIn);
+      const tx = await dexContract.swapBForA(amtIn, 0);
+      await waitTx(tx, "Swap TKB → TKA", "swap");
+    }
+    document.getElementById('swap-in').value = '';
+    document.getElementById('swap-out').value = '';
+    await refreshAll();
+  } catch (e) {
+    toast("Swap failed", e.reason || e.message, "error");
+  }
+}
+
+async function doAddLiquidity() {
+  const vA = document.getElementById('liq-A').value;
+  const vB = document.getElementById('liq-B').value;
+  if (!vA || !vB || parseFloat(vA) <= 0 || parseFloat(vB) <= 0) {
+    toast("Invalid amounts", "Enter both token amounts", "error"); return;
+  }
+  try {
+    const amtA = ethers.parseEther(vA);
+    const amtB = ethers.parseEther(vB);
+    await approveIfNeeded(tokenAContract, amtA);
+    await approveIfNeeded(tokenBContract, amtB);
+    const tx = await dexContract.addLiquidity(amtA, amtB);
+    await waitTx(tx, `Add ${vA} TKA + ${vB} TKB`, "add");
+    document.getElementById('liq-A').value = '';
+    document.getElementById('liq-B').value = '';
+    await refreshAll();
+  } catch (e) {
+    toast("Add liquidity failed", e.reason || e.message, "error");
+  }
+}
+
+async function doRemoveLiquidity() {
+  const val = document.getElementById('rm-lp').value;
+  if (!val || parseFloat(val) <= 0) { toast("Invalid amount", "Enter LP token amount", "error"); return; }
+  try {
+    const lpAmt = ethers.parseEther(val);
+    const tx = await dexContract.removeLiquidity(lpAmt);
+    await waitTx(tx, `Remove ${val} LPT`, "rm");
+    document.getElementById('rm-lp').value = '';
+    await refreshAll();
+  } catch (e) {
+    toast("Remove liquidity failed", e.reason || e.message, "error");
+  }
+}
+
+async function checkArb() {
+  if (!arb) { toast("No arbitrage contract", "Deploy arbitrage.sol first", "error"); return; }
+  const capA = ethers.parseEther(document.getElementById('arb-capA').value || "0");
+  const capB = ethers.parseEther(document.getElementById('arb-capB').value || "0");
+  try {
+    const [p1, p2] = await arb.checkOpportunity(capA, capB);
+    document.getElementById('arb-p1').textContent = fmt(p1) + ' TKA ' + (p1 > 0n ? '✅' : '❌');
+    document.getElementById('arb-p2').textContent = fmt(p2) + ' TKB ' + (p2 > 0n ? '✅' : '❌');
+  } catch (e) {
+    toast("Check failed", e.message, "error");
+  }
+}
+
+async function doArbitrage() {
+  if (!arb) { toast("No arbitrage contract", "Deploy arbitrage.sol first", "error"); return; }
+  const capA = ethers.parseEther(document.getElementById('arb-capA').value || "0");
+  const capB = ethers.parseEther(document.getElementById('arb-capB').value || "0");
+  try {
+    // Fund arb contract
+    if (capA > 0n) {
+      await approveIfNeeded(tokenAContract, capA, await arb.getAddress());
+      await tokenAContract.transfer(await arb.getAddress(), capA);
+    }
+    if (capB > 0n) {
+      await approveIfNeeded(tokenBContract, capB, await arb.getAddress());
+      await tokenBContract.transfer(await arb.getAddress(), capB);
+    }
+    const tx = await arb.executeArbitrage(capA, capB);
+    await waitTx(tx, "Arbitrage Execution", "arb");
+    await refreshAll();
+  } catch (e) {
+    toast("Arbitrage failed", e.reason || e.message, "error");
+  }
+}
+
+async function getFaucet() {
+  try {
+    const tx1 = await tokenAContract.faucet(userAddr);
+    await tx1.wait();
+    const tx2 = await tokenBContract.faucet(userAddr);
+    await tx2.wait();
+    toast("Faucet!", "Received 1000 TKA + 1000 TKB", "success");
+    await refreshBalances();
+  } catch (e) {
+    toast("Faucet failed", e.reason || e.message, "error");
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+async function approveIfNeeded(tokenContract, amount, spender) {
+  const sp = spender || await dexContract.getAddress();
+  const allowance = await tokenContract.allowance(userAddr, sp);
+  if (allowance < amount) {
+    toast("Approving...", "Waiting for approval transaction", "info");
+    const tx = await tokenContract.approve(sp, ethers.MaxUint256);
+    await tx.wait();
+  }
+}
+
+async function waitTx(tx, label, type) {
+  toast("Pending...", `${label} - waiting for confirmation`, "info");
+  const receipt = await tx.wait();
+  const hash = receipt.hash;
+  addTxLog(label, hash, type);
+  toast("Success!", `${label} confirmed`, "success");
+}
+
+function addTxLog(label, hash, type) {
+  txLog.unshift({ label, hash, type });
+  const el = document.getElementById('tx-log');
+  if (!el) return;
+  el.innerHTML = txLog.slice(0, 20).map(t => `
+    <div class="tx-item">
+      <span><span class="badge badge-${t.type}">${t.type.toUpperCase()}</span> &nbsp;${t.label}</span>
+      <a href="${explorerUrl(t.hash)}" target="_blank">${t.hash.slice(0,10)}... ↗</a>
+    </div>
+  `).join('');
+}
+
+function explorerUrl(hash) {
+  if (addresses.network === 'sepolia') return `https://sepolia.etherscan.io/tx/${hash}`;
+  return '#';
+}
+
+function fmt(wei) {
+  return parseFloat(ethers.formatEther(wei)).toFixed(4);
+}
+function fmt4(wei) {
+  return parseFloat(ethers.formatEther(wei)).toFixed(6);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(title, msg, type = "info") {
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+</script>
+</body>
+</html>
