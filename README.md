@@ -327,7 +327,6 @@ Covers:
 - Checking arbitrage opportunity between DEX1 and DEX2
 - Executing profitable arbitrage and observing profit
 - Demonstrating failed arbitrage with same-ratio DEXes
-- On-chain verification via Sepolia Etherscan
 
 ---
 
