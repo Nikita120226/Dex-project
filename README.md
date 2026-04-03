@@ -59,14 +59,17 @@
 
 ## 🔐 Access Control Summary
 
-| Contract | Restricted Function | Who Can Call |
-| LPToken 1 | `mint()`, `burn()` | DEX 1 contract only |
-| LPToken 2 | `mint()`, `burn()` | DEX 2 contract only |
-| Token (TKA/TKB) | `mint()` | Deployer (owner) only |
-| Token (TKA/TKB) | `faucet()` | Anyone (for testing) |
-| Arbitrage | `executeArbitrage()` | Deployer (owner) only |
-| Arbitrage | `checkOpportunity()` | Anyone (view — free) |
-| DEX | `addLiquidity()`, `removeLiquidity()`, `swap*()` | Anyone |
+## 🔐 Access Control Summary
+
+| Contract        | Restricted Function              | Who Can Call                |
+|----------------|---------------------------------|-----------------------------|
+| LPToken 1      | `mint()`, `burn()`              | DEX 1 contract only         |
+| LPToken 2      | `mint()`, `burn()`              | DEX 2 contract only         |
+| Token (TKA/TKB)| `mint()`                        | Deployer (owner) only       |
+| Token (TKA/TKB)| `faucet()`                      | Anyone (for testing)        |
+| Arbitrage      | `executeArbitrage()`            | Deployer (owner) only       |
+| Arbitrage      | `checkOpportunity()`            | Anyone (view — free)        |
+| DEX            | `addLiquidity()`, `removeLiquidity()`, `swap*()` | Anyone |
 
 ---
 
@@ -316,7 +319,6 @@ npx hardhat verify --network sepolia 0x964f26b13743634b92430bfB955463E8b3A1F64C 
 ---
 
 ## 📹 Video Demonstration
-> 🎬 **[VIDEO LINK HERE]** 
 
 Covers:
 - Connecting MetaMask to the deployed UI
