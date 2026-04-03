@@ -13,26 +13,44 @@ async function main() {
   const [rA] = await dex1.getReserves();
   console.log("Current DEX1 Reserve A:", ethers.formatEther(rA), "TKA");
 
-  // Seed DEX1 with 1000 TKA : 2000 TKB
-  const amtA1 = ethers.parseEther("0");
-  const amtB1 = ethers.parseEther("0");
+  // =========================
+  // ✅ SEED DEX1
+  // =========================
+  const amtA1 = ethers.parseEther("1000");   
+  const amtB1 = ethers.parseEther("2000");   
+
+  console.log("\n--- DEX1 INPUT ---");
+  console.log("Amount A:", ethers.formatEther(amtA1));
+  console.log("Amount B:", ethers.formatEther(amtB1));
+
   console.log("\nApproving TKA for DEX1...");
   await (await tokenA.approve(addresses.dex1, ethers.MaxUint256)).wait();
+
   console.log("Approving TKB for DEX1...");
   await (await tokenB.approve(addresses.dex1, ethers.MaxUint256)).wait();
+
   console.log("Adding liquidity to DEX1...");
   await (await dex1.addLiquidity(amtA1, amtB1)).wait();
 
   const [rA1, rB1] = await dex1.getReserves();
   console.log("✅ DEX1 seeded:", ethers.formatEther(rA1), "TKA :", ethers.formatEther(rB1), "TKB");
 
-  // Seed DEX2 with 1000 TKA : 2100 TKB (different ratio for arbitrage)
-  const amtA2 = ethers.parseEther("0");
-  const amtB2 = ethers.parseEther("0");
+  // =========================
+  // ✅ SEED DEX2 (DIFFERENT RATIO)
+  // =========================
+  const amtA2 = ethers.parseEther("1000");
+  const amtB2 = ethers.parseEther("2100");   // slightly different for arbitrage
+
+  console.log("\n--- DEX2 INPUT ---");
+  console.log("Amount A:", ethers.formatEther(amtA2));
+  console.log("Amount B:", ethers.formatEther(amtB2));
+
   console.log("\nApproving TKA for DEX2...");
   await (await tokenA.approve(addresses.dex2, ethers.MaxUint256)).wait();
+
   console.log("Approving TKB for DEX2...");
   await (await tokenB.approve(addresses.dex2, ethers.MaxUint256)).wait();
+
   console.log("Adding liquidity to DEX2...");
   await (await dex2.addLiquidity(amtA2, amtB2)).wait();
 
