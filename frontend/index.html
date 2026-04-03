@@ -796,12 +796,12 @@ async function autoFillB() {
   try {
     const amtA = ethers.parseEther(val);
     // Use exact ratio from reserves
-    const ratio = rB / rA;
-    const amtB = (amtA * ratio);
-    // Add 1 wei to account for rounding (prevents ratio mismatch)
-    document.getElementById('liq-B').value = parseFloat(
-      ethers.formatEther(amtB)
-    ).toFixed(6);
+    
+    const amtB = (amtA * rB) / rA;
+    
+    const inputB = document.getElementById('liq-B');
+    inputB.value = ethers.formatEther(amtB);
+    inputB._exactWei = amtB;
   } catch {}
 }
 

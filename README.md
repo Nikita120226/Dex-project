@@ -131,7 +131,7 @@
 
 ## 🖥️ How to Access the Deployed UI
 
-### Option A — Hosted UI (Recommended)
+### Hosted UI 
 > 🔗https://nikita-assignment3.vercel.app
 
 1. Open the link in any browser
@@ -142,24 +142,7 @@
 4. Click **"🦊 Connect Wallet"** on the page
 5. Approve the connection in MetaMask popup
 
-### Option B — Run Locally
 
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/Nikita_assignment3.git
-cd Nikita_assignment3
-
-# Install dependencies
-npm install
-
-# Serve the frontend
-cd frontend
-npx http-server . -p 3000
-
-# Open http://localhost:3000 in your browser
-```
-
----
 
 ## 💧 How to Add Liquidity and Receive LP Tokens
 
