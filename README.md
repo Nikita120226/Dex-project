@@ -320,7 +320,7 @@ npx hardhat verify --network sepolia 0x964f26b13743634b92430bfB955463E8b3A1F64C 
 
 Covers:
 - Connecting MetaMask to the deployed UI
-- Adding liquidity and observing LP token minting
+- Adding liquidity
 - Performing TKA→TKB and TKB→TKA swaps
 - Checking arbitrage opportunity between DEX1 and DEX2
 - Executing profitable arbitrage and observing profit
