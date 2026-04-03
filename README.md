@@ -319,7 +319,7 @@ npx hardhat verify --network sepolia 0x964f26b13743634b92430bfB955463E8b3A1F64C 
 ---
 
 ## 📹 Video Demonstration
-[Link](https://drive.google.com/file/d/1xor0zfgEvRA5WFynBmNCRzQBF0ahSRo-/view?usp=sharing)
+[Link](https://drive.google.com/file/d/1xor0zfgEvRA5WFynBmNCRzQBF0ahSRo-/view?usp=sharing)\
 Covers:
 - Connecting MetaMask to the deployed UI
 - Adding liquidity
