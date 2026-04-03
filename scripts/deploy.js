@@ -47,25 +47,31 @@ async function main() {
   await arbitrage.waitForDeployment();
   console.log("   Arbitrage deployed:", await arbitrage.getAddress());
 
-  // ── 5. Seed liquidity in DEX1 (1:2 ratio — 1 TKA = 2 TKB) ──────────────
+  // ── 5. Seed liquidity in DEX1 ─────────────────────────────
   console.log("\n6. Seeding initial liquidity in DEX1 (1000 TKA : 2000 TKB)...");
-  const seedA1 = 100000n;
-  const seedB1 = 200000n;
+
+  const seedA1 = ethers.parseEther("1000");  
+  const seedB1 = ethers.parseEther("2000");  
+
   await (await tokenA.approve(dex1.target, seedA1)).wait();
   await (await tokenB.approve(dex1.target, seedB1)).wait();
 
   await (await dex1.addLiquidity(seedA1, seedB1)).wait();
   console.log("   DEX1 seeded.");
 
-  // ── 6. Seed DEX2 with DIFFERENT ratio to create arbitrage opportunity ────
+
+  // ── 6. Seed DEX2 ─────────────────────────────────────────
   console.log("7. Seeding DEX2 with different ratio (1000 TKA : 2100 TKB) for arbitrage...");
-  const seedA2 = 100000n;
-  const seedB2 = 210000n;
+
+  const seedA2 = ethers.parseEther("1000");  
+  const seedB2 = ethers.parseEther("2100");  
+
   await (await tokenA.approve(dex2.target, seedA2)).wait();
   await (await tokenB.approve(dex2.target, seedB2)).wait();
 
   await (await dex2.addLiquidity(seedA2, seedB2)).wait();
   console.log("   DEX2 seeded.");
+
 
   // ── 7. Save addresses to JSON for frontend ───────────────────────────────
   const addresses = {
